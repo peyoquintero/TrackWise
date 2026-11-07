@@ -1,0 +1,6 @@
+{
+  "name": "Central Florida Food Access Gaps",
+  "description": "Decision-support platform identifying food access gaps, gap types, uncertainty, and intervention priorities across 490 Central Florida census tracts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

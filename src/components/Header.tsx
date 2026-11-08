@@ -19,9 +19,9 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const navTabs: { id: MainTab; label: string }[] = [
     { id: 'overview', label: 'Overview & Map' },
-    { id: 'q1_where', label: 'Q1: Where' },
-    { id: 'q2_type', label: 'Q2: Gap Types' },
-    { id: 'q5_unknowns', label: 'Q5: Unknowns' },
+    { id: 'q1_where', label: 'Where (Gaps Map)' },
+    { id: 'q2_type', label: 'Gap Types' },
+    { id: 'q5_unknowns', label: 'Data Unknowns' },
     { id: 'scenario', label: 'Scenario Studio' },
     { id: 'portal', label: 'Upload Portal' },
     { id: 'dictionary', label: 'Data Dictionary' },

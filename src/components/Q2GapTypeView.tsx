@@ -129,7 +129,7 @@ export const Q2GapTypeView: React.FC<Q2GapTypeViewProps> = ({ tracts }) => {
       {/* Overview Lead */}
       <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors">
         <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-          Q2: What Type of Food Access Gap Is It?
+          What Type of Food Access Gap Is It?
         </h2>
         <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-3xl leading-relaxed">
           Food access is not one single problem. Two Central Florida neighborhoods can appear underserved for entirely different structural reasons. Distinguishing between physical grocery absence, transportation poverty, and benefit under-enrollment ensures limited funding and pantries are deployed effectively.

@@ -207,6 +207,7 @@ export default function App() {
                     shadingMode={shadingMode}
                     setShadingMode={setShadingMode}
                     isDark={isDark}
+                    onSwitchToLeaflet={() => setMapEngine('leaflet')}
                   />
                 ) : (
                   <MapLeaflet
@@ -313,19 +314,57 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 2: Q1 Where */}
+        {/* Tab 2: Where (Gaps Map) */}
         {activeTab === 'q1_where' && (
           <div className="space-y-6">
             <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors">
               <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                Q1: Where Are the Food-Access Gaps? (FR-01 to FR-06)
+                Where Are the Food-Access Gaps? (Census Tract Analysis)
               </h2>
               <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-3xl leading-relaxed">
                 The solution identifies 149 of 490 census tracts (30%) in Central Florida with active food access barriers, home to approximately 948,600 residents (34% of the region's 2.79M population). Orange County concentrates the majority of classic food deserts (49 tracts).
               </p>
             </div>
 
-            <div className="min-h-[550px] w-full">
+            {/* Map Engine Selector Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white dark:bg-slate-900 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="flex items-center gap-2">
+                <MapIcon className="w-4 h-4 text-red-600" />
+                <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                  Census Tract Food Access Map View
+                </span>
+                <span className="text-[11px] text-slate-500 hidden md:inline">
+                  (490 Census Tracts · Red-Scale Severity & Demographic Shading)
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                <span className="text-[11px] font-medium text-slate-500 mr-1">Basemap Engine:</span>
+                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg text-xs">
+                  <button
+                    onClick={() => setMapEngine('google')}
+                    className={`px-2.5 py-1 rounded-md transition-colors font-medium ${
+                      mapEngine === 'google'
+                        ? 'bg-white dark:bg-slate-750 text-red-600 dark:text-red-400 font-semibold shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                  >
+                    Google Maps
+                  </button>
+                  <button
+                    onClick={() => setMapEngine('leaflet')}
+                    className={`px-2.5 py-1 rounded-md transition-colors font-medium ${
+                      mapEngine === 'leaflet'
+                        ? 'bg-white dark:bg-slate-750 text-red-600 dark:text-red-400 font-semibold shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                  >
+                    Canvas GIS (Esri)
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="h-[600px] min-h-[550px] w-full">
               {mapEngine === 'google' ? (
                 <MapGoogle
                   tracts={countyTracts}
@@ -336,6 +375,7 @@ export default function App() {
                   shadingMode={shadingMode}
                   setShadingMode={setShadingMode}
                   isDark={isDark}
+                  onSwitchToLeaflet={() => setMapEngine('leaflet')}
                 />
               ) : (
                 <MapLeaflet

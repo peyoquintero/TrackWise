@@ -3,9 +3,11 @@ import {
   APIProvider,
   Map as GoogleMapComponent,
   useMap,
+  useApiLoadingStatus,
+  APILoadingStatus,
 } from '@vis.gl/react-google-maps';
 import { TractData, RetailerData, ShadingMode, CountyFilter } from '../types';
-import { Layers, Store, RotateCcw, Map as MapIcon, Globe, Sparkles } from 'lucide-react';
+import { Layers, Store, RotateCcw, Map as MapIcon, Globe, Sparkles, Key, AlertTriangle, ArrowRight } from 'lucide-react';
 
 interface MapGoogleProps {
   tracts: TractData[];
@@ -16,6 +18,7 @@ interface MapGoogleProps {
   shadingMode: ShadingMode;
   setShadingMode: (mode: ShadingMode) => void;
   isDark: boolean;
+  onSwitchToLeaflet?: () => void;
 }
 
 // Sub-component to manage GeoJSON Data Layer and interactions on the google.maps.Map instance
@@ -221,7 +224,7 @@ const GoogleMapDataLayer: React.FC<{
 
     const mouseOutListener = map.data.addListener(
       'mouseout',
-      (e: google.maps.Data.MouseEvent) => {
+      () => {
         hoveredGeoidRef.current = null;
         map.data.revertStyle();
         onHoverTract(null, null);
@@ -295,10 +298,6 @@ const GoogleMapDataLayer: React.FC<{
         zIndex: 20,
       });
 
-      circle.addListener('click', () => {
-        alert(`${r.store_name}\n${r.address}, ${r.city}\nSNAP Authorized Store`);
-      });
-
       circles.push(circle);
     });
 
@@ -312,6 +311,39 @@ const GoogleMapDataLayer: React.FC<{
   return null;
 };
 
+// Loading and Status wrapper
+const MapLoadingChecker: React.FC<{
+  onSwitchToLeaflet?: () => void;
+  children: React.ReactNode;
+}> = ({ onSwitchToLeaflet, children }) => {
+  const status = useApiLoadingStatus();
+
+  if (status === APILoadingStatus.FAILED || status === APILoadingStatus.AUTH_FAILURE) {
+    return (
+      <div className="w-full h-full min-h-[500px] flex flex-col items-center justify-center p-6 text-center bg-slate-900 text-white">
+        <div className="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center mb-4">
+          <AlertTriangle className="w-6 h-6" />
+        </div>
+        <h3 className="text-base font-semibold mb-1">Google Maps Platform Notice</h3>
+        <p className="text-xs text-slate-300 max-w-md mb-6 leading-relaxed">
+          Google Maps Platform requires an active API key with Maps JavaScript API enabled. You can continue using our built-in high-performance Canvas GIS (Esri) basemap which requires zero API keys.
+        </p>
+        {onSwitchToLeaflet && (
+          <button
+            onClick={onSwitchToLeaflet}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-md transition-colors"
+          >
+            <span>Switch to Free Canvas GIS (Esri)</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+};
+
 export const MapGoogle: React.FC<MapGoogleProps> = ({
   tracts,
   retailers,
@@ -321,22 +353,78 @@ export const MapGoogle: React.FC<MapGoogleProps> = ({
   shadingMode,
   setShadingMode,
   isDark,
+  onSwitchToLeaflet,
 }) => {
   const [showRetailers, setShowRetailers] = useState<boolean>(false);
   const [mapTypeId, setMapTypeId] = useState<'roadmap' | 'satellite' | 'hybrid' | 'terrain'>('roadmap');
   const [hoveredTract, setHoveredTract] = useState<TractData | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
 
-  // Read Google Maps API Key from environment
-  const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || '';
+  // Read Google Maps API Key from environment or local storage
+  const [apiKey, setApiKey] = useState<string>(() => {
+    return (
+      localStorage.getItem('GOOGLE_MAPS_API_KEY') ||
+      (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY ||
+      ''
+    );
+  });
+  const [keyInput, setKeyInput] = useState<string>('');
+  const [showKeyModal, setShowKeyModal] = useState<boolean>(false);
 
-  // Reset to default Central FL View
-  const handleResetView = () => {
-    // Handled by county filter or pan
+  const handleSaveKey = () => {
+    if (keyInput.trim()) {
+      localStorage.setItem('GOOGLE_MAPS_API_KEY', keyInput.trim());
+      setApiKey(keyInput.trim());
+      setShowKeyModal(false);
+    }
   };
 
+  // If no API Key is available at all, offer prompt or quick fallback to Canvas GIS
+  if (!apiKey) {
+    return (
+      <div className="relative w-full h-[600px] min-h-[520px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col items-center justify-center p-6 text-center bg-slate-900 text-white">
+        <div className="w-12 h-12 rounded-xl bg-red-600/20 text-red-400 flex items-center justify-center mb-4">
+          <Globe className="w-6 h-6" />
+        </div>
+        <h3 className="text-base font-semibold mb-2">Google Maps Platform Setup</h3>
+        <p className="text-xs text-slate-300 max-w-md mb-6 leading-relaxed">
+          To view this map using Google Maps Platform (Roadmap, Satellite, Terrain), please provide a Google Maps API Key, or switch to the built-in Canvas GIS map which requires no key and has zero watermarks.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-md mb-4">
+          <input
+            type="text"
+            placeholder="Paste Google Maps API Key (AIza...)"
+            value={keyInput}
+            onChange={(e) => setKeyInput(e.target.value)}
+            className="flex-1 px-3 py-2 text-xs bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-hidden focus:border-red-500"
+          />
+          <button
+            onClick={handleSaveKey}
+            disabled={!keyInput.trim()}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow-xs whitespace-nowrap transition-colors"
+          >
+            Apply Key
+          </button>
+        </div>
+
+        {onSwitchToLeaflet && (
+          <div className="pt-2">
+            <button
+              onClick={onSwitchToLeaflet}
+              className="text-xs text-slate-400 hover:text-white underline flex items-center gap-1.5 transition-colors"
+            >
+              <span>Or switch directly to Canvas GIS (Esri World Canvas)</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="relative w-full h-[580px] lg:h-full min-h-[520px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col bg-slate-900">
+    <div className="relative w-full h-[600px] min-h-[520px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col bg-slate-900">
       {/* 1. Top Map Toolbar */}
       <div className="absolute top-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
         {/* Shading Mode Selector */}
@@ -449,35 +537,37 @@ export const MapGoogle: React.FC<MapGoogleProps> = ({
       </div>
 
       {/* 2. Google Map Instance */}
-      <div className="w-full h-full flex-1">
+      <div className="w-full h-full flex-1 min-h-[500px]">
         <APIProvider apiKey={apiKey}>
-          <GoogleMapComponent
-            style={{ width: '100%', height: '100%' }}
-            defaultCenter={{ lat: 28.5383, lng: -81.3792 }} // Central Florida / Orlando
-            defaultZoom={9}
-            mapTypeId={mapTypeId}
-            mapId="DEMO_MAP_ID"
-            internalUsageAttributionIds={['gmp_mcp_codeassist_v1_aistudio']}
-            gestureHandling="greedy"
-            disableDefaultUI={false}
-            streetViewControl={false}
-            mapTypeControl={false}
-          >
-            <GoogleMapDataLayer
-              tracts={tracts}
-              retailers={retailers}
-              selectedCounty={selectedCounty}
-              selectedTract={selectedTract}
-              onSelectTract={onSelectTract}
-              shadingMode={shadingMode}
-              showRetailers={showRetailers}
-              isDark={isDark}
-              onHoverTract={(tract, pos) => {
-                setHoveredTract(tract);
-                setTooltipPos(pos);
-              }}
-            />
-          </GoogleMapComponent>
+          <MapLoadingChecker onSwitchToLeaflet={onSwitchToLeaflet}>
+            <GoogleMapComponent
+              style={{ width: '100%', height: '100%', minHeight: '500px' }}
+              defaultCenter={{ lat: 28.5383, lng: -81.3792 }} // Central Florida / Orlando
+              defaultZoom={9}
+              mapTypeId={mapTypeId}
+              mapId="DEMO_MAP_ID"
+              internalUsageAttributionIds={['gmp_mcp_codeassist_v1_aistudio']}
+              gestureHandling="greedy"
+              disableDefaultUI={false}
+              streetViewControl={false}
+              mapTypeControl={false}
+            >
+              <GoogleMapDataLayer
+                tracts={tracts}
+                retailers={retailers}
+                selectedCounty={selectedCounty}
+                selectedTract={selectedTract}
+                onSelectTract={onSelectTract}
+                shadingMode={shadingMode}
+                showRetailers={showRetailers}
+                isDark={isDark}
+                onHoverTract={(tract, pos) => {
+                  setHoveredTract(tract);
+                  setTooltipPos(pos);
+                }}
+              />
+            </GoogleMapComponent>
+          </MapLoadingChecker>
         </APIProvider>
       </div>
 

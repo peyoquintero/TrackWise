@@ -66,7 +66,7 @@ export const Q5UnknownsView: React.FC<Q5UnknownsViewProps> = ({ tracts, onSelect
       {/* Intro Header */}
       <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors">
         <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-          Q5: What Don't We Know? (Data Gaps & Uncertainty)
+          What Don't We Know? (Data Gaps & Uncertainty)
         </h2>
         <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-3xl leading-relaxed">
           High-confidence decisions require knowing where the data is uncertain. This view surfaces statistical blind spots, tracts where Census survey margins of error are wide, and explicit data substitutions made across Central Florida.

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Search, Download, FileSpreadsheet, Database, ExternalLink } from 'lucide-react';
+import { Search, Download, FileSpreadsheet, Database, ExternalLink, FileText, BookOpen } from 'lucide-react';
 
 export const DataDictionaryView: React.FC = () => {
   const [search, setSearch] = useState('');
+  const [showSpecPreview, setShowSpecPreview] = useState(false);
 
   const dictionaryItems = [
     { field: 'GEOID', type: 'Text (11-digit)', source: 'Census 2020', desc: '11-digit standard Census 2020 tract ID (State 12 + County 3-digit + Tract 6-digit).' },
@@ -72,6 +73,14 @@ export const DataDictionaryView: React.FC = () => {
           {/* Deliverables Downloads */}
           <div className="flex flex-wrap items-center gap-2">
             <a
+              href="/data/Central_Florida_Food_Access_Gaps_Specification_v1.1.md"
+              download="Central_Florida_Food_Access_Gaps_Specification_v1.1.md"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 rounded-lg transition-colors shadow-xs"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Project Specification v1.1 (MD)</span>
+            </a>
+            <a
               href="/data/central_florida_food_gaps.csv"
               download="central_florida_food_gaps.csv"
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
@@ -96,6 +105,25 @@ export const DataDictionaryView: React.FC = () => {
               <span>Tract Polygons (GeoJSON)</span>
             </a>
           </div>
+        </div>
+
+        {/* Specification Reference Banner */}
+        <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-start sm:items-center gap-2 text-slate-600 dark:text-slate-400">
+            <BookOpen className="w-4 h-4 text-red-600 shrink-0 mt-0.5 sm:mt-0" />
+            <span>
+              <b>Specification v1.1 Committed:</b> Full architecture, 5-step classification rules, and 4-point confidence rubric are committed to repository root as <code className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-mono text-[11px] text-slate-800 dark:text-slate-200">SPECIFICATION.md</code> and <code className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-mono text-[11px] text-slate-800 dark:text-slate-200">docs/Central_Florida_Food_Access_Gaps_Specification_v1.1.md</code>.
+            </span>
+          </div>
+          <a
+            href="/data/Central_Florida_Food_Access_Gaps_Specification_v1.1.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-red-600 dark:text-red-400 font-semibold hover:underline flex items-center gap-1 shrink-0"
+          >
+            <span>Read Spec in Browser</span>
+            <ExternalLink className="w-3 h-3" />
+          </a>
         </div>
       </div>
 

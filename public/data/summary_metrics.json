@@ -1,0 +1,99 @@
+{
+  "total_tracts": 490,
+  "total_population": 2793746,
+  "gap_tracts_count": 148,
+  "gap_population": 981485,
+  "gap_pct_of_pop": 35.1,
+  "primary_gap_counts": {
+    "Vehicle-compounded gap": 74,
+    "Classic food desert": 68,
+    "No gap identified": 283,
+    "Possible blind spot": 57,
+    "SNAP enrollment gap": 6,
+    "Insufficient data": 2
+  },
+  "review_tier_counts": {
+    "Tier 2": 385,
+    "Review required": 92,
+    "Tier 1": 13
+  },
+  "confidence_counts": {
+    "Medium": 401,
+    "Low": 76,
+    "High": 13
+  },
+  "wide_moe_count": 479,
+  "unknown_count": 481,
+  "county_stats": {
+    "Orange": {
+      "total_tracts": 267,
+      "total_pop": 1471937,
+      "gap_tracts": 88,
+      "gap_pop": 577649,
+      "primary_gaps": {
+        "Classic food desert": 49,
+        "No gap identified": 153,
+        "SNAP enrollment gap": 6,
+        "Possible blind spot": 24,
+        "Vehicle-compounded gap": 33,
+        "Insufficient data": 2
+      },
+      "review_tiers": {
+        "Tier 2": 213,
+        "Review required": 46,
+        "Tier 1": 8
+      }
+    },
+    "Osceola": {
+      "total_tracts": 59,
+      "total_pop": 427415,
+      "gap_tracts": 26,
+      "gap_pop": 202730,
+      "primary_gaps": {
+        "Vehicle-compounded gap": 13,
+        "No gap identified": 27,
+        "Classic food desert": 13,
+        "Possible blind spot": 6
+      },
+      "review_tiers": {
+        "Tier 2": 47,
+        "Review required": 11,
+        "Tier 1": 1
+      }
+    },
+    "Lake": {
+      "total_tracts": 75,
+      "total_pop": 412924,
+      "gap_tracts": 19,
+      "gap_pop": 112234,
+      "primary_gaps": {
+        "No gap identified": 44,
+        "Classic food desert": 2,
+        "Possible blind spot": 12,
+        "Vehicle-compounded gap": 17
+      },
+      "review_tiers": {
+        "Tier 2": 57,
+        "Review required": 16,
+        "Tier 1": 2
+      }
+    },
+    "Seminole": {
+      "total_tracts": 89,
+      "total_pop": 481470,
+      "gap_tracts": 15,
+      "gap_pop": 88872,
+      "primary_gaps": {
+        "No gap identified": 59,
+        "Possible blind spot": 15,
+        "Vehicle-compounded gap": 11,
+        "Classic food desert": 4
+      },
+      "review_tiers": {
+        "Tier 2": 68,
+        "Review required": 19,
+        "Tier 1": 2
+      }
+    }
+  }
+}

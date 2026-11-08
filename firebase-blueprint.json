@@ -1,0 +1,93 @@
+{
+  "entities": {
+    "CensusTract": {
+      "title": "Census Tract Food Access Model",
+      "description": "Census tract boundary and food access metrics across Central Florida",
+      "type": "object",
+      "properties": {
+        "geoid": { "type": "string", "maxLength": 30 },
+        "county": { "type": "string", "maxLength": 50 },
+        "name": { "type": "string", "maxLength": 100 },
+        "population": { "type": "number" },
+        "poverty_rate": { "type": "number" },
+        "primary_gap": { "type": "string", "maxLength": 100 },
+        "has_gap": { "type": "number" },
+        "no_vehicle_pct": { "type": "number" },
+        "snap_pct": { "type": "number" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" }
+      },
+      "required": ["geoid", "county", "population", "primary_gap"]
+    },
+    "SnapRetailer": {
+      "title": "SNAP Food Store Retailer",
+      "description": "Authorized USDA SNAP store location",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 50 },
+        "store_name": { "type": "string", "maxLength": 150 },
+        "address": { "type": "string", "maxLength": 200 },
+        "city": { "type": "string", "maxLength": 100 },
+        "county": { "type": "string", "maxLength": 50 },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" }
+      },
+      "required": ["id", "store_name", "county"]
+    },
+    "CommunitySite": {
+      "title": "Church or School Community Site",
+      "description": "Geocoded church pantry or public school meal distribution site",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 50 },
+        "name": { "type": "string", "maxLength": 150 },
+        "address": { "type": "string", "maxLength": 200 },
+        "city": { "type": "string", "maxLength": 100 },
+        "county": { "type": "string", "maxLength": 50 },
+        "type": { "type": "string", "maxLength": 50 },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" }
+      },
+      "required": ["id", "name", "type", "county"]
+    },
+    "RegionalSummary": {
+      "title": "Regional Food Access Summary Metrics",
+      "description": "Aggregated food gap numbers for Central Florida counties",
+      "type": "object",
+      "properties": {
+        "county": { "type": "string", "maxLength": 50 },
+        "totalTracts": { "type": "number" },
+        "gapTracts": { "type": "number" },
+        "gapPopulation": { "type": "number" },
+        "classic": { "type": "number" },
+        "vehiclePrimary": { "type": "number" },
+        "snapPrimary": { "type": "number" },
+        "blindSpots": { "type": "number" },
+        "retailers": { "type": "number" }
+      },
+      "required": ["county", "totalTracts", "gapTracts"]
+    }
+  },
+  "firestore": {
+    "/census_tracts/{geoid}": {
+      "schema": { "$ref": "#/entities/CensusTract" },
+      "description": "Central Florida census tract database records"
+    },
+    "/snap_retailers/{storeId}": {
+      "schema": { "$ref": "#/entities/SnapRetailer" },
+      "description": "USDA authorized SNAP food stores"
+    },
+    "/churches/{churchId}": {
+      "schema": { "$ref": "#/entities/CommunitySite" },
+      "description": "Geocoded church community pantries"
+    },
+    "/schools/{schoolId}": {
+      "schema": { "$ref": "#/entities/CommunitySite" },
+      "description": "Geocoded public school meal sites"
+    },
+    "/summary_metrics/{countyId}": {
+      "schema": { "$ref": "#/entities/RegionalSummary" },
+      "description": "County and regional summary metrics"
+    }
+  }
+}

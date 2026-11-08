@@ -6,12 +6,14 @@ import {
   useApiLoadingStatus,
   APILoadingStatus,
 } from '@vis.gl/react-google-maps';
-import { TractData, RetailerData, ShadingMode, CountyFilter } from '../types';
-import { Layers, Store, RotateCcw, Map as MapIcon, Globe, Sparkles, Key, AlertTriangle, ArrowRight } from 'lucide-react';
+import { TractData, RetailerData, ChurchData, SchoolData, ShadingMode, CountyFilter } from '../types';
+import { Layers, Store, Church, GraduationCap, RotateCcw, Map as MapIcon, Globe, Sparkles, Key, AlertTriangle, ArrowRight } from 'lucide-react';
 
 interface MapGoogleProps {
   tracts: TractData[];
   retailers: RetailerData[];
+  churches?: ChurchData[];
+  schools?: SchoolData[];
   selectedCounty: CountyFilter;
   selectedTract: TractData | null;
   onSelectTract: (tract: TractData) => void;
@@ -25,21 +27,29 @@ interface MapGoogleProps {
 const GoogleMapDataLayer: React.FC<{
   tracts: TractData[];
   retailers: RetailerData[];
+  churches?: ChurchData[];
+  schools?: SchoolData[];
   selectedCounty: CountyFilter;
   selectedTract: TractData | null;
   onSelectTract: (tract: TractData) => void;
   shadingMode: ShadingMode;
   showRetailers: boolean;
+  showChurches: boolean;
+  showSchools: boolean;
   isDark: boolean;
   onHoverTract: (tract: TractData | null, clientPos: { x: number; y: number } | null) => void;
 }> = ({
   tracts,
   retailers,
+  churches = [],
+  schools = [],
   selectedCounty,
   selectedTract,
   onSelectTract,
   shadingMode,
   showRetailers,
+  showChurches,
+  showSchools,
   isDark,
   onHoverTract,
 }) => {
@@ -47,6 +57,8 @@ const GoogleMapDataLayer: React.FC<{
   const [geoJsonLoaded, setGeoJsonLoaded] = useState(false);
   const hoveredGeoidRef = useRef<string | null>(null);
   const retailerMarkersRef = useRef<google.maps.Circle[]>([]);
+  const churchMarkersRef = useRef<google.maps.Circle[]>([]);
+  const schoolMarkersRef = useRef<google.maps.Circle[]>([]);
 
   // Use Record<string, TractData> dictionary instead of new Map() to avoid identifier shadowing
   const tractLookup = useMemo(() => {
@@ -126,8 +138,8 @@ const GoogleMapDataLayer: React.FC<{
             fillOpacity = 0.8;
             break;
           case 'Possible blind spot':
-            fillColor = '#f59e0b'; // Amber (Section 4.1)
-            fillOpacity = 0.75;
+            fillColor = '#fca5a5'; // Lightest red / Salmon (monochromatic red scale)
+            fillOpacity = 0.8;
             break;
           case 'Insufficient data':
             fillColor = '#94a3b8'; // Slate Gray
@@ -298,6 +310,19 @@ const GoogleMapDataLayer: React.FC<{
         zIndex: 20,
       });
 
+      const infoWindow = new google.maps.InfoWindow({
+        content: `<div style="padding:4px; font-family:sans-serif; color:#111;">
+          <div style="font-weight:600; font-size:12px; color:#047857;">🛒 ${r.store_name}</div>
+          <div style="font-size:11px; color:#4b5563;">${r.address}, ${r.city}</div>
+          <div style="font-size:10px; font-weight:500; color:#059669; margin-top:2px;">Authorized SNAP Retailer (${r.county} Co.)</div>
+        </div>`,
+      });
+
+      circle.addListener('click', (e: google.maps.MapMouseEvent) => {
+        infoWindow.setPosition(e.latLng || { lat: r.latitude, lng: r.longitude });
+        infoWindow.open(map);
+      });
+
       circles.push(circle);
     });
 
@@ -307,6 +332,112 @@ const GoogleMapDataLayer: React.FC<{
       circles.forEach((c) => c.setMap(null));
     };
   }, [map, showRetailers, retailers, selectedCounty]);
+
+  // Manage Church Markers
+  useEffect(() => {
+    if (!map) return;
+
+    churchMarkersRef.current.forEach((m) => m.setMap(null));
+    churchMarkersRef.current = [];
+
+    if (!showChurches || !churches) return;
+
+    const activeChurches =
+      selectedCounty === 'All'
+        ? churches
+        : churches.filter((c) => c.county === selectedCounty);
+
+    const circles: google.maps.Circle[] = [];
+
+    activeChurches.forEach((c) => {
+      if (typeof c.latitude !== 'number' || typeof c.longitude !== 'number') return;
+      const circle = new google.maps.Circle({
+        strokeColor: '#5b21b6',
+        strokeOpacity: 0.95,
+        strokeWeight: 2,
+        fillColor: '#8b5cf6',
+        fillOpacity: 0.9,
+        map,
+        center: { lat: c.latitude, lng: c.longitude },
+        radius: 160, // meters
+        zIndex: 25,
+      });
+
+      const infoWindow = new google.maps.InfoWindow({
+        content: `<div style="padding:4px; font-family:sans-serif; color:#111;">
+          <div style="font-weight:600; font-size:12px; color:#5b21b6;">✝️ ${c.name}</div>
+          <div style="font-size:11px; color:#4b5563;">${c.address}, ${c.city}</div>
+          <div style="font-size:10px; font-weight:500; color:#7c3aed; margin-top:2px;">${c.type} (${c.county} Co.)</div>
+        </div>`,
+      });
+
+      circle.addListener('click', (e: google.maps.MapMouseEvent) => {
+        infoWindow.setPosition(e.latLng || { lat: c.latitude, lng: c.longitude });
+        infoWindow.open(map);
+      });
+
+      circles.push(circle);
+    });
+
+    churchMarkersRef.current = circles;
+
+    return () => {
+      circles.forEach((c) => c.setMap(null));
+    };
+  }, [map, showChurches, churches, selectedCounty]);
+
+  // Manage School Markers
+  useEffect(() => {
+    if (!map) return;
+
+    schoolMarkersRef.current.forEach((m) => m.setMap(null));
+    schoolMarkersRef.current = [];
+
+    if (!showSchools || !schools) return;
+
+    const activeSchools =
+      selectedCounty === 'All'
+        ? schools
+        : schools.filter((s) => s.county === selectedCounty);
+
+    const circles: google.maps.Circle[] = [];
+
+    activeSchools.forEach((s) => {
+      if (typeof s.latitude !== 'number' || typeof s.longitude !== 'number') return;
+      const circle = new google.maps.Circle({
+        strokeColor: '#b45309',
+        strokeOpacity: 0.95,
+        strokeWeight: 2,
+        fillColor: '#f59e0b',
+        fillOpacity: 0.9,
+        map,
+        center: { lat: s.latitude, lng: s.longitude },
+        radius: 160, // meters
+        zIndex: 24,
+      });
+
+      const infoWindow = new google.maps.InfoWindow({
+        content: `<div style="padding:4px; font-family:sans-serif; color:#111;">
+          <div style="font-weight:600; font-size:12px; color:#b45309;">🏫 ${s.name}</div>
+          <div style="font-size:11px; color:#4b5563;">${s.address}, ${s.city}</div>
+          <div style="font-size:10px; font-weight:500; color:#d97706; margin-top:2px;">${s.type} (${s.county} Co.)</div>
+        </div>`,
+      });
+
+      circle.addListener('click', (e: google.maps.MapMouseEvent) => {
+        infoWindow.setPosition(e.latLng || { lat: s.latitude, lng: s.longitude });
+        infoWindow.open(map);
+      });
+
+      circles.push(circle);
+    });
+
+    schoolMarkersRef.current = circles;
+
+    return () => {
+      circles.forEach((c) => c.setMap(null));
+    };
+  }, [map, showSchools, schools, selectedCounty]);
 
   return null;
 };
@@ -347,6 +478,8 @@ const MapLoadingChecker: React.FC<{
 export const MapGoogle: React.FC<MapGoogleProps> = ({
   tracts,
   retailers,
+  churches = [],
+  schools = [],
   selectedCounty,
   selectedTract,
   onSelectTract,
@@ -356,6 +489,8 @@ export const MapGoogle: React.FC<MapGoogleProps> = ({
   onSwitchToLeaflet,
 }) => {
   const [showRetailers, setShowRetailers] = useState<boolean>(false);
+  const [showChurches, setShowChurches] = useState<boolean>(false);
+  const [showSchools, setShowSchools] = useState<boolean>(false);
   const [mapTypeId, setMapTypeId] = useState<'roadmap' | 'satellite' | 'hybrid' | 'terrain'>('roadmap');
   const [hoveredTract, setHoveredTract] = useState<TractData | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
@@ -370,6 +505,13 @@ export const MapGoogle: React.FC<MapGoogleProps> = ({
   });
   const [keyInput, setKeyInput] = useState<string>('');
   const [showKeyModal, setShowKeyModal] = useState<boolean>(false);
+
+  useEffect(() => {
+    const envKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY;
+    if (envKey && envKey !== apiKey) {
+      setApiKey(envKey);
+    }
+  }, [(import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY, apiKey]);
 
   const handleSaveKey = () => {
     if (keyInput.trim()) {
@@ -533,6 +675,32 @@ export const MapGoogle: React.FC<MapGoogleProps> = ({
             <Store className="w-3.5 h-3.5" />
             <span>SNAP Stores ({retailers.length})</span>
           </button>
+
+          {/* Churches Toggle */}
+          <button
+            onClick={() => setShowChurches(!showChurches)}
+            className={`pointer-events-auto px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 shadow-md transition-colors ${
+              showChurches
+                ? 'bg-purple-600 text-white border-purple-700'
+                : 'bg-white/95 dark:bg-slate-900/95 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50'
+            }`}
+          >
+            <Church className="w-3.5 h-3.5" />
+            <span>Churches ({churches.length})</span>
+          </button>
+
+          {/* Schools Toggle */}
+          <button
+            onClick={() => setShowSchools(!showSchools)}
+            className={`pointer-events-auto px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 shadow-md transition-colors ${
+              showSchools
+                ? 'bg-amber-600 text-white border-amber-700'
+                : 'bg-white/95 dark:bg-slate-900/95 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50'
+            }`}
+          >
+            <GraduationCap className="w-3.5 h-3.5" />
+            <span>Schools ({schools.length})</span>
+          </button>
         </div>
       </div>
 
@@ -555,11 +723,15 @@ export const MapGoogle: React.FC<MapGoogleProps> = ({
               <GoogleMapDataLayer
                 tracts={tracts}
                 retailers={retailers}
+                churches={churches}
+                schools={schools}
                 selectedCounty={selectedCounty}
                 selectedTract={selectedTract}
                 onSelectTract={onSelectTract}
                 shadingMode={shadingMode}
                 showRetailers={showRetailers}
+                showChurches={showChurches}
+                showSchools={showSchools}
                 isDark={isDark}
                 onHoverTract={(tract, pos) => {
                   setHoveredTract(tract);

@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { TractData, RetailerData, ShadingMode, CountyFilter } from '../types';
-import { Layers, Store, Maximize2, Info } from 'lucide-react';
+import { TractData, RetailerData, ChurchData, SchoolData, ShadingMode, CountyFilter } from '../types';
+import { Layers, Store, Church, GraduationCap, Maximize2, Info } from 'lucide-react';
 
 interface MapLeafletProps {
   tracts: TractData[];
   retailers: RetailerData[];
+  churches?: ChurchData[];
+  schools?: SchoolData[];
   selectedCounty: CountyFilter;
   selectedTract: TractData | null;
   onSelectTract: (tract: TractData) => void;
@@ -17,6 +19,8 @@ interface MapLeafletProps {
 export const MapLeaflet: React.FC<MapLeafletProps> = ({
   tracts,
   retailers,
+  churches = [],
+  schools = [],
   selectedCounty,
   selectedTract,
   onSelectTract,
@@ -28,8 +32,12 @@ export const MapLeaflet: React.FC<MapLeafletProps> = ({
   const mapInstanceRef = useRef<L.Map | null>(null);
   const geojsonLayerRef = useRef<L.GeoJSON | null>(null);
   const retailerLayerRef = useRef<L.LayerGroup | null>(null);
+  const churchLayerRef = useRef<L.LayerGroup | null>(null);
+  const schoolLayerRef = useRef<L.LayerGroup | null>(null);
 
   const [showRetailers, setShowRetailers] = useState<boolean>(false);
+  const [showChurches, setShowChurches] = useState<boolean>(false);
+  const [showSchools, setShowSchools] = useState<boolean>(false);
   const [geojsonData, setGeojsonData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -129,8 +137,8 @@ export const MapLeaflet: React.FC<MapLeafletProps> = ({
           fillOpacity = 0.8;
           break;
         case 'Possible blind spot':
-          fillColor = '#f59e0b'; // Amber
-          fillOpacity = 0.75;
+          fillColor = '#fca5a5'; // Lightest red / Salmon (monochromatic red scale)
+          fillOpacity = 0.8;
           break;
         case 'Insufficient data':
           fillColor = '#94a3b8'; // Slate
@@ -291,16 +299,16 @@ export const MapLeaflet: React.FC<MapLeafletProps> = ({
 
       filteredRetailers.forEach((r) => {
         const marker = L.circleMarker([r.latitude, r.longitude], {
-          radius: 3.5,
-          fillColor: '#2563eb',
-          color: '#ffffff',
-          weight: 1,
+          radius: 4,
+          fillColor: '#10b981',
+          color: '#047857',
+          weight: 1.5,
           opacity: 0.9,
           fillOpacity: 0.85,
         });
 
         marker.bindTooltip(
-          `<div style="font-size: 11px;"><b>${r.store_name}</b><br/>${r.address}, ${r.city}</div>`,
+          `<div style="font-size: 11px;"><b>🛒 ${r.store_name}</b><br/>${r.address}, ${r.city}<br/><span style="color:#059669; font-weight:600;">Authorized SNAP Retailer</span></div>`,
           { sticky: true }
         );
         markers.push(marker);
@@ -311,6 +319,86 @@ export const MapLeaflet: React.FC<MapLeafletProps> = ({
       retailerLayerRef.current = layerGroup;
     }
   }, [showRetailers, retailers, selectedCounty]);
+
+  // Render Churches Layer
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (churchLayerRef.current) {
+      map.removeLayer(churchLayerRef.current);
+      churchLayerRef.current = null;
+    }
+
+    if (showChurches && churches && churches.length > 0) {
+      const markers: L.CircleMarker[] = [];
+      const filteredChurches =
+        selectedCounty === 'All'
+          ? churches
+          : churches.filter((c) => c.county === selectedCounty);
+
+      filteredChurches.forEach((c) => {
+        const marker = L.circleMarker([c.latitude, c.longitude], {
+          radius: 5,
+          fillColor: '#8b5cf6',
+          color: '#5b21b6',
+          weight: 2,
+          opacity: 0.95,
+          fillOpacity: 0.9,
+        });
+
+        marker.bindTooltip(
+          `<div style="font-size: 11px;"><b>✝️ ${c.name}</b><br/>${c.address}, ${c.city}<br/><span style="color:#7c3aed; font-weight:600;">${c.type}</span></div>`,
+          { sticky: true }
+        );
+        markers.push(marker);
+      });
+
+      const layerGroup = L.layerGroup(markers);
+      layerGroup.addTo(map);
+      churchLayerRef.current = layerGroup;
+    }
+  }, [showChurches, churches, selectedCounty]);
+
+  // Render Schools Layer
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (schoolLayerRef.current) {
+      map.removeLayer(schoolLayerRef.current);
+      schoolLayerRef.current = null;
+    }
+
+    if (showSchools && schools && schools.length > 0) {
+      const markers: L.CircleMarker[] = [];
+      const filteredSchools =
+        selectedCounty === 'All'
+          ? schools
+          : schools.filter((s) => s.county === selectedCounty);
+
+      filteredSchools.forEach((s) => {
+        const marker = L.circleMarker([s.latitude, s.longitude], {
+          radius: 5,
+          fillColor: '#f59e0b',
+          color: '#b45309',
+          weight: 2,
+          opacity: 0.95,
+          fillOpacity: 0.9,
+        });
+
+        marker.bindTooltip(
+          `<div style="font-size: 11px;"><b>🏫 ${s.name}</b><br/>${s.address}, ${s.city}<br/><span style="color:#d97706; font-weight:600;">${s.type}</span></div>`,
+          { sticky: true }
+        );
+        markers.push(marker);
+      });
+
+      const layerGroup = L.layerGroup(markers);
+      layerGroup.addTo(map);
+      schoolLayerRef.current = layerGroup;
+    }
+  }, [showSchools, schools, selectedCounty]);
 
   return (
     <div className="relative w-full h-full min-h-[500px] flex flex-col bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs">
@@ -379,14 +467,40 @@ export const MapLeaflet: React.FC<MapLeafletProps> = ({
         {/* Retailer Layer Toggle */}
         <button
           onClick={() => setShowRetailers(!showRetailers)}
-          className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border transition-colors ${
+          className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md border transition-colors ${
             showRetailers
-              ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700'
+              ? 'bg-emerald-600 text-white border-emerald-700'
               : 'text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <Store className="w-3.5 h-3.5" />
           <span>SNAP Stores ({retailers.length.toLocaleString()})</span>
+        </button>
+
+        {/* Churches Layer Toggle */}
+        <button
+          onClick={() => setShowChurches(!showChurches)}
+          className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md border transition-colors ${
+            showChurches
+              ? 'bg-purple-600 text-white border-purple-700'
+              : 'text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Church className="w-3.5 h-3.5" />
+          <span>Churches ({churches.length.toLocaleString()})</span>
+        </button>
+
+        {/* Schools Layer Toggle */}
+        <button
+          onClick={() => setShowSchools(!showSchools)}
+          className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md border transition-colors ${
+            showSchools
+              ? 'bg-amber-600 text-white border-amber-700'
+              : 'text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <GraduationCap className="w-3.5 h-3.5" />
+          <span>Schools ({schools.length.toLocaleString()})</span>
         </button>
       </div>
 
@@ -430,9 +544,9 @@ export const MapLeaflet: React.FC<MapLeafletProps> = ({
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3.5 h-3.5 rounded-xs bg-[#f59e0b] shrink-0" />
+              <span className="w-3.5 h-3.5 rounded-xs bg-[#fca5a5] shrink-0 border border-slate-300 dark:border-slate-600" />
               <span className="text-slate-700 dark:text-slate-300">
-                Possible blind spot (57-58 tracts)
+                Possible blind spot
               </span>
             </div>
             <div className="flex items-center gap-2">

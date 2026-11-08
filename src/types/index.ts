@@ -79,6 +79,30 @@ export interface RetailerData {
   county: string;
 }
 
+export interface ChurchData {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  zip: string;
+  latitude: number;
+  longitude: number;
+  county: CountyName;
+  type: string;
+}
+
+export interface SchoolData {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  zip: string;
+  latitude: number;
+  longitude: number;
+  county: CountyName;
+  type: string;
+}
+
 export interface SummaryMetrics {
   total_tracts: number;
   total_population: number;
@@ -105,11 +129,49 @@ export interface SummaryMetrics {
 
 export type ShadingMode = 'severity' | 'poverty' | 'snap' | 'vehicle' | 'confidence';
 
-export type MainTab =
-  | 'overview'
-  | 'q1_where'
-  | 'q2_type'
-  | 'q5_unknowns'
-  | 'scenario'
-  | 'portal'
-  | 'dictionary';
+export type MainTab = 'dashboard' | 'route' | 'portal' | 'dictionary';
+
+export type RouteDispatchStatus = 'Draft' | 'Approved' | 'Dispatched';
+
+export interface RouteStop {
+  stopNumber: number;
+  locationId: string;
+  locationName: string;
+  locationAddress: string;
+  locationType: 'Church' | 'School';
+  city: string;
+  county: CountyName;
+  latitude: number;
+  longitude: number;
+  surroundingPovertyRate: number;
+  surroundingGapType: PrimaryGap;
+  estimatedArrival: string;
+  departureTime: string;
+  stopDurationMins: number;
+  targetPeopleServed: number;
+  keyNeedsSummary: string;
+  specialInstructions: string;
+}
+
+export interface FoodTruckRoute {
+  routeId: string;
+  routeName: string;
+  truckName: string;
+  driverName: string;
+  depotName: string;
+  depotAddress: string;
+  depotLat: number;
+  depotLng: number;
+  county: CountyFilter;
+  priorityFocus: string;
+  totalDistanceMiles: number;
+  totalDrivingMinutes: number;
+  totalServiceMinutes: number;
+  totalPeopleServed: number;
+  stops: RouteStop[];
+  status: RouteDispatchStatus;
+  approvedBy?: string;
+  approvalTimestamp?: string;
+  dispatchedTimestamp?: string;
+  logisticsNotes?: string;
+}

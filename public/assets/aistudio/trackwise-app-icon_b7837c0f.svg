@@ -1,0 +1,36 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 512 512"
+  role="img"
+  aria-labelledby="trackwise-icon-title trackwise-icon-description"
+>
+  <title id="trackwise-icon-title">TrackWise application icon</title>
+  <desc id="trackwise-icon-description">
+    Four red census tract shapes with a location marker.
+  </desc>
+
+  <rect width="512" height="512" rx="112" fill="#fcf7f3" />
+
+  <path
+    d="M98 98C98 80.33 112.33 66 130 66H247V247H66V130C66 112.33 80.33 98 98 98Z"
+    fill="#4c1015"
+  />
+  <path
+    d="M265 66H382C417.35 66 446 94.65 446 130V247H265V66Z"
+    fill="#7a1720"
+  />
+  <path
+    d="M66 265H247V446H130C94.65 446 66 417.35 66 382V265Z"
+    fill="#a8232d"
+  />
+  <path
+    d="M265 265H446V352C446 370.76 437.78 388.57 423.52 400.76L387.41 431.63C376.82 440.68 363.35 445.65 349.42 445.65H265V265Z"
+    fill="#d84a50"
+  />
+
+  <path
+    d="M166 244C166 194.29 206.29 154 256 154C305.71 154 346 194.29 346 244C346 315.25 256 379 256 379C256 379 166 315.25 166 244Z"
+    fill="#fcf7f3"
+  />
+  <circle cx="256" cy="244" r="32" fill="#a8232d" />
+</svg>

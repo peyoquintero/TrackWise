@@ -135,36 +135,58 @@ export function classifyTractGaps(
 
 /**
  * Confidence Scoring & Review Tier (Specification Section 6.3)
+ * Incorporates Poverty MOE, SNAP MOE, Population size, and Secondary Gap corroboration.
  */
 export function scoreConfidence(
   povertyRate: number | null,
   povertyMoe: number | null,
   population: number,
   primaryGap: PrimaryGap,
-  secondaryGap: SecondaryGap
-): { score: number; confidence: ConfidenceLevel; reviewTier: ReviewTier } {
+  secondaryGap: SecondaryGap,
+  snapRate?: number | null,
+  snapMoe?: number | null
+): { score: number; confidence: ConfidenceLevel; reviewTier: ReviewTier; moeRationale: string } {
   let score = 0;
+  const rationales: string[] = [];
 
-  // Poverty MOE <= 30% of estimate: 2 pts (or <= 50%: 1 pt)
+  // Poverty MOE <= 30% of estimate: 2 pts (Census ACS statistical reliability standard)
   if (povertyRate !== null && povertyRate > 0 && povertyMoe !== null) {
     const relMoe = povertyMoe / povertyRate;
     if (relMoe <= 0.3) {
       score += 2;
+      rationales.push('Poverty estimate has high statistical precision (relative MOE <= 30%)');
     } else if (relMoe <= 0.5) {
       score += 1;
+      rationales.push('Poverty estimate has moderate precision (relative MOE <= 50%)');
+    } else {
+      rationales.push('Poverty estimate has high sampling error (relative MOE > 50%)');
     }
   } else if (povertyRate === 0) {
     score += 1;
+    rationales.push('Poverty rate estimate is 0%');
   }
 
-  // Population >= 2,500: 1 pt
+  // SNAP MOE factor (client suggestion: factor in SNAP MOE alongside poverty)
+  if (snapRate !== undefined && snapRate !== null && snapRate > 0 && snapMoe !== undefined && snapMoe !== null) {
+    const snapRelMoe = snapMoe / snapRate;
+    if (snapRelMoe <= 0.3) {
+      score += 1;
+      rationales.push('SNAP participation estimate is statistically precise (relative MOE <= 30%)');
+    }
+  }
+
+  // Population >= 2,500: 1 pt (census tract statistical stability threshold)
   if (population >= 2500) {
     score += 1;
+    rationales.push('Tract population >= 2,500 supports sample stability');
+  } else {
+    rationales.push('Small tract population (< 2,500) increases estimate variance');
   }
 
   // Secondary gap that supports the primary: 1 pt
   if (secondaryGap !== null) {
     score += 1;
+    rationales.push('Multi-dimensional need corroborated by secondary gap classification');
   }
 
   // Not a blind spot or insufficient data: 1 pt
@@ -188,7 +210,125 @@ export function scoreConfidence(
     reviewTier = 'Tier 2';
   }
 
-  return { score, confidence, reviewTier };
+  return {
+    score,
+    confidence,
+    reviewTier,
+    moeRationale: rationales.join('. '),
+  };
+}
+
+export interface SensitivityResult {
+  thresholdShiftPct: number;
+  stableTractsCount: number;
+  boundaryTractsCount: number;
+  stabilityPercentage: number;
+  baselineGapCount: number;
+  shiftedGapCount: number;
+  shiftedGapPopulation: number;
+  changedTracts: Array<{
+    tract: TractData;
+    baselineGap: PrimaryGap;
+    shiftedGap: PrimaryGap;
+  }>;
+}
+
+/**
+ * Tests classification stability under small threshold shifts (+/- 5%, +/- 10%, etc.)
+ */
+export function runSensitivityTest(
+  tracts: TractData[],
+  thresholdShiftPct: number
+): SensitivityResult {
+  const shiftMultiplier = 1 + thresholdShiftPct / 100;
+
+  // Extract distributions
+  const validPov = tracts
+    .map((t) => t.poverty_rate)
+    .filter((v): v is number => v !== null)
+    .sort((a, b) => a - b);
+  const povQ4Cutoff = (validPov[Math.floor(validPov.length * 0.75)] || 17.1) * shiftMultiplier;
+
+  const validSnap = tracts
+    .map((t) => t.snap_rate)
+    .filter((v): v is number => v !== null)
+    .sort((a, b) => a - b);
+  const snapMedianCutoff = (validSnap[Math.floor(validSnap.length * 0.5)] || 11.3) * shiftMultiplier;
+
+  const validVeh = tracts.map((t) => t.no_vehicle_low_access_pct).sort((a, b) => a - b);
+  const vehQ4Cutoff = (validVeh[Math.floor(validVeh.length * 0.75)] || 0.49) * shiftMultiplier;
+
+  let stableCount = 0;
+  let boundaryCount = 0;
+  let shiftedGapCount = 0;
+  let shiftedGapPopulation = 0;
+  let baselineGapCount = 0;
+  const changedTracts: SensitivityResult['changedTracts'] = [];
+
+  for (const t of tracts) {
+    const isBaselineGap = t.has_gap === 1;
+    if (isBaselineGap) baselineGapCount++;
+
+    if (t.primary_gap === 'Insufficient data') {
+      stableCount++;
+      continue;
+    }
+
+    // Determine shifted primary gap
+    let shiftedGap: PrimaryGap = 'No gap identified';
+
+    const povMatch = t.poverty_rate !== null && t.poverty_rate >= povQ4Cutoff;
+    const vehMatch = t.low_access_flag === 1 && (t.no_vehicle_low_access_flag === 1 || t.no_vehicle_low_access_pct >= vehQ4Cutoff);
+    const snapMatch = povMatch && t.snap_rate !== null && t.snap_rate <= snapMedianCutoff;
+
+    if (povMatch && t.lila_flag === 1) {
+      shiftedGap = 'Classic food desert';
+    } else if (vehMatch) {
+      shiftedGap = 'Vehicle-compounded gap';
+    } else if (snapMatch) {
+      shiftedGap = 'SNAP enrollment gap';
+    } else {
+      // Check blind spot
+      const nearPov = t.poverty_rate !== null && t.poverty_rate >= povQ4Cutoff * 0.7;
+      const nearVeh = t.no_vehicle_low_access_pct >= vehQ4Cutoff * 0.7;
+      const nearSnap = t.snap_rate !== null && t.snap_rate >= snapMedianCutoff * 0.7;
+      let q3Count = (nearPov ? 1 : 0) + (nearVeh ? 1 : 0) + (nearSnap ? 1 : 0);
+      if (q3Count >= 2 && !povMatch) {
+        shiftedGap = 'Possible blind spot';
+      }
+    }
+
+    const isShiftedGap = ['Classic food desert', 'Vehicle-compounded gap', 'SNAP enrollment gap'].includes(shiftedGap);
+    if (isShiftedGap) {
+      shiftedGapCount++;
+      shiftedGapPopulation += t.population;
+    }
+
+    if (shiftedGap === t.primary_gap) {
+      stableCount++;
+    } else {
+      boundaryCount++;
+      changedTracts.push({
+        tract: t,
+        baselineGap: t.primary_gap,
+        shiftedGap,
+      });
+    }
+  }
+
+  const total = tracts.length || 490;
+  const stabilityPercentage = Math.round((stableCount / total) * 1000) / 10;
+
+  return {
+    thresholdShiftPct,
+    stableTractsCount: stableCount,
+    boundaryTractsCount: boundaryCount,
+    stabilityPercentage,
+    baselineGapCount,
+    shiftedGapCount,
+    shiftedGapPopulation,
+    changedTracts,
+  };
 }
 
 /**

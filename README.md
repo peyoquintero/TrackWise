@@ -132,7 +132,7 @@ The platform includes two mapping engines accessible via the top-bar engine togg
 
 ### Prerequisites
 - Node.js 18+ (tested on Node.js 22)
-- npm or bun
+- Node.js 22 & npm
 
 ### Installation
 ```bash

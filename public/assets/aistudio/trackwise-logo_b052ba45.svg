@@ -1,0 +1,92 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 1120 320"
+  role="img"
+  aria-labelledby="trackwise-title trackwise-description"
+>
+  <title id="trackwise-title">TrackWise</title>
+  <desc id="trackwise-description">
+    A red four-part census tract map with an integrated tracking path, followed by the TrackWise wordmark.
+  </desc>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&amp;display=swap");
+  </style>
+
+  <rect width="1120" height="320" fill="#fcf7f3" />
+
+  <g transform="translate(42 39)">
+    <path
+      d="M42 22C42 9.85 51.85 0 64 0H117V93H0V55C0 42.85 9.85 33 22 33H42V22Z"
+      fill="#4c1015"
+    />
+    <path
+      d="M131 0H188C200.15 0 210 9.85 210 22V51H180V76H131V0Z"
+      fill="#7a1720"
+    />
+    <path
+      d="M0 107H117V224H78V201H22C9.85 201 0 191.15 0 179V107Z"
+      fill="#a8232d"
+    />
+    <path
+      d="M131 90H180V65H210V173C210 180.17 206.51 186.9 200.65 191.02L162.1 218.13C158.39 220.74 153.96 222.14 149.42 222.14H131V90Z"
+      fill="#d84a50"
+    />
+
+    <path
+      d="M49 146C49 126.67 64.67 111 84 111C103.33 111 119 126.67 119 146C119 174 84 202 84 202C84 202 49 174 49 146Z"
+      fill="#fcf7f3"
+    />
+    <circle cx="84" cy="146" r="12" fill="#a8232d" />
+
+    <path
+      d="M145 120H190M145 142H177M145 164H164"
+      fill="none"
+      stroke="#fcf7f3"
+      stroke-linecap="round"
+      stroke-width="9"
+    />
+  </g>
+
+  <g transform="translate(312 0)">
+    <text
+      x="0"
+      y="182"
+      fill="#211a1b"
+      font-family="Manrope, Arial, sans-serif"
+      font-size="112"
+      font-weight="800"
+      letter-spacing="-5"
+    >
+      Track
+    </text>
+    <text
+      x="292"
+      y="182"
+      fill="#a8232d"
+      font-family="Manrope, Arial, sans-serif"
+      font-size="112"
+      font-weight="800"
+      letter-spacing="-5"
+    >
+      Wise
+    </text>
+    <path
+      d="M8 219H589"
+      fill="none"
+      stroke="#e6dad5"
+      stroke-linecap="round"
+      stroke-width="2"
+    />
+    <text
+      x="8"
+      y="257"
+      fill="#6e6062"
+      font-family="Manrope, Arial, sans-serif"
+      font-size="18"
+      font-weight="600"
+      letter-spacing="4.8"
+    >
+      FOOD ACCESS, MADE VISIBLE
+    </text>
+  </g>
+</svg>

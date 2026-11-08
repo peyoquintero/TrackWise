@@ -1,3 +1,15 @@
+// Suppress browser-extension injected script errors (e.g. chrome-extension:// fetch interceptors)
+window.addEventListener('error', (event) => {
+  if (event.filename && event.filename.startsWith('chrome-extension://')) {
+    event.preventDefault();
+  }
+});
+window.addEventListener('unhandledrejection', (event) => {
+  if (event.reason && String(event.reason).includes('chrome-extension://')) {
+    event.preventDefault();
+  }
+});
+
 // Google Maps Platform client-side quota defense
 (window as unknown as { gm_authFailure?: () => void }).gm_authFailure = () => {
   window.dispatchEvent(new CustomEvent('gmp-quota-exceeded'));

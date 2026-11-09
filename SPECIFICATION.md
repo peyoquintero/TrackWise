@@ -1,6 +1,6 @@
 # **Central Florida Food Access Gaps: Solution Specification**
 
-Nov 7, 2026 · @Fabian Rico
+Nov 7, 2026 · @Fabian Rico, @Pedro Quintero, @Freddy Vergara
 
 ## **1\. Purpose**
 
@@ -78,6 +78,10 @@ Success criteria:
 ## **5\. Data sources**
 
 All inputs are public and joined by the 11-digit census tract ID (GEOID).
+
+Currently public data is found a
+t
+https://drive.google.com/drive/folders/1zuwSZjkK3gcvEzNFPJ8THFRw9ulCgA-p
 
 | Source | Fields used | Known limits |
 | :---- | :---- | :---- |

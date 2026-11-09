@@ -1,4 +1,6 @@
 import express from 'express';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 import fs from 'fs';
@@ -11,7 +13,30 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use(express.json());
+
+// CORS must be registered before any route so preflight requests succeed.
+// API is read-only data + chat; open origin is intentional for Looker Studio/dashboards.
+app.use('/api', cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+}));
+app.use(express.json({ limit: '10kb' }));
+
+const MAX_MESSAGE_LENGTH = 1000;
+
+// Each chat request may call Gemini with the server's key, so cap the request rate per IP.
+const chatLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please wait a minute and try again.' },
+});
+
+function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
 
 // Analytical Fallback Engine for instant Q&A when Gemini API key is missing or offline
 function generateAnalyticalFallback(query: string): string {
@@ -179,12 +204,15 @@ Total across Central Florida: 149 food gap tracts (948,632 residents).`;
 }
 
 // Read-only Chat Endpoint
-app.post('/api/chat', async (req, res) => {
+app.post('/api/chat', chatLimiter, async (req, res) => {
   try {
     const { message } = req.body;
 
     if (!message || typeof message !== 'string') {
       return res.status(400).json({ error: 'Message text is required.' });
+    }
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      return res.status(400).json({ error: `Message must be ${MAX_MESSAGE_LENGTH} characters or fewer.` });
     }
 
     // Check for CUD intent in prompt
@@ -197,22 +225,12 @@ app.post('/api/chat', async (req, res) => {
     }
 
     // Dynamic API key lookup on every request
-    const apiKey =
-      process.env.GEMINI_API_KEY ||
-      process.env.API_KEY ||
-      process.env.VITE_GEMINI_API_KEY ||
-      '';
+    // Server-only variables: never read VITE_* names here, those are bundled into the client.
+    const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
 
     if (apiKey) {
       try {
-        const ai = new GoogleGenAI({
-          apiKey,
-          httpOptions: {
-            headers: {
-              'User-Agent': 'aistudio-build',
-            },
-          },
-        });
+        const ai = new GoogleGenAI({ apiKey });
 
         const systemInstruction = `You are Tracky, the Central Florida Food Access Assistant.
 Your primary role is to answer questions strictly related to the official Central Florida Food Access Gaps dataset covering 490 census tracts across Orange, Osceola, Seminole, and Lake counties.
@@ -250,29 +268,18 @@ RULES:
 
         const replyText = response.text || generateAnalyticalFallback(message);
         return res.json({ reply: replyText });
-      } catch (geminiError: any) {
-        console.warn('Gemini API call failed, falling back to Analytical Engine:', geminiError?.message);
+      } catch (geminiError: unknown) {
+        console.warn('Gemini API call failed, falling back to Analytical Engine:', errorMessage(geminiError));
         return res.json({ reply: generateAnalyticalFallback(message) });
       }
     }
 
     // Fallback if no API key is set
     return res.json({ reply: generateAnalyticalFallback(message) });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Chat Endpoint Error:', error);
-    return res.json({ reply: generateAnalyticalFallback(req.body?.message || '') });
+    return res.status(500).json({ error: 'Something went wrong while processing your request.' });
   }
-});
-
-// Enable CORS for external API consumers (Looker Studio, Dashboards, External APIs)
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
 });
 
 // Helper: Load JSON datasets from disk or memory
@@ -302,8 +309,9 @@ app.get('/api/db/tracts', (req, res) => {
       collection: 'census_tracts',
       data: result,
     });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    console.error('API error:', errorMessage(err));
+    res.status(500).json({ error: 'Internal server error.' });
   }
 });
 
@@ -325,8 +333,9 @@ app.get('/api/db/snap-retailers', (req, res) => {
       collection: 'snap_retailers',
       data: result,
     });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    console.error('API error:', errorMessage(err));
+    res.status(500).json({ error: 'Internal server error.' });
   }
 });
 
@@ -340,8 +349,9 @@ app.get('/api/db/churches', (req, res) => {
       collection: 'churches',
       data: churchesData || [],
     });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    console.error('API error:', errorMessage(err));
+    res.status(500).json({ error: 'Internal server error.' });
   }
 });
 
@@ -355,8 +365,9 @@ app.get('/api/db/schools', (req, res) => {
       collection: 'schools',
       data: schoolsData || [],
     });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    console.error('API error:', errorMessage(err));
+    res.status(500).json({ error: 'Internal server error.' });
   }
 });
 
@@ -369,8 +380,9 @@ app.get('/api/db/summary', (req, res) => {
       collection: 'summary_metrics',
       data: summaryData || {},
     });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    console.error('API error:', errorMessage(err));
+    res.status(500).json({ error: 'Internal server error.' });
   }
 });
 

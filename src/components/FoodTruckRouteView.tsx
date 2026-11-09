@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import L from 'leaflet';
-import { TractData, ChurchData, SchoolData, CountyFilter, FoodTruckRoute, RouteStop, RouteDispatchStatus, PrimaryGap } from '../types';
+import { CountyName, TractData, ChurchData, SchoolData, CountyFilter, FoodTruckRoute, RouteStop, RouteDispatchStatus, PrimaryGap } from '../types';
 import {
   Truck,
   MapPin,
@@ -412,7 +412,7 @@ export const FoodTruckRouteView: React.FC<FoodTruckRouteViewProps> = ({
         locationAddress: nextLoc.address,
         locationType: nextLoc.type,
         city: nextLoc.city,
-        county: nextLoc.county as any,
+        county: nextLoc.county as CountyName,
         latitude: nextLoc.latitude,
         longitude: nextLoc.longitude,
         surroundingPovertyRate: surroundingTract?.poverty_rate || 0,

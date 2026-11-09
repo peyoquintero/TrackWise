@@ -9,6 +9,8 @@ import {
 import { TractData, RetailerData, ChurchData, SchoolData, ShadingMode, CountyFilter } from '../types';
 import { Layers, Store, Church, GraduationCap, RotateCcw, Map as MapIcon, Globe, Sparkles, Key, AlertTriangle, ArrowRight } from 'lucide-react';
 
+const ENV_MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
+
 interface MapGoogleProps {
   tracts: TractData[];
   retailers: RetailerData[];
@@ -499,7 +501,7 @@ export const MapGoogle: React.FC<MapGoogleProps> = ({
   const [apiKey, setApiKey] = useState<string>(() => {
     return (
       localStorage.getItem('GOOGLE_MAPS_API_KEY') ||
-      (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY ||
+      ENV_MAPS_KEY ||
       ''
     );
   });
@@ -507,11 +509,10 @@ export const MapGoogle: React.FC<MapGoogleProps> = ({
   const [showKeyModal, setShowKeyModal] = useState<boolean>(false);
 
   useEffect(() => {
-    const envKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY;
-    if (envKey && envKey !== apiKey) {
-      setApiKey(envKey);
+    if (ENV_MAPS_KEY && ENV_MAPS_KEY !== apiKey) {
+      setApiKey(ENV_MAPS_KEY);
     }
-  }, [(import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY, apiKey]);
+  }, [apiKey]);
 
   const handleSaveKey = () => {
     if (keyInput.trim()) {

@@ -90,9 +90,9 @@ export const FloatingAssistant: React.FC = () => {
       };
 
       setMessages((prev) => [...prev, botMsg]);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Fallback message if network or timeout occurs
-      const isAbort = err.name === 'AbortError';
+      const isAbort = err instanceof DOMException && err.name === 'AbortError';
       const fallbackText = isAbort
         ? `Central Florida Food Access Overview:
 

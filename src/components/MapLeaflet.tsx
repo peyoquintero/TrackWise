@@ -1,7 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
+import type { Feature, FeatureCollection, Geometry } from 'geojson';
 import { TractData, RetailerData, ChurchData, SchoolData, ShadingMode, CountyFilter } from '../types';
 import { Layers, Store, Church, GraduationCap, Maximize2, Info } from 'lucide-react';
+
+type TractFeature = Feature<Geometry, { GEOID?: string }>;
+type TractFeatureCollection = FeatureCollection<Geometry, { GEOID?: string }>;
 
 interface MapLeafletProps {
   tracts: TractData[];
@@ -38,7 +42,7 @@ export const MapLeaflet: React.FC<MapLeafletProps> = ({
   const [showRetailers, setShowRetailers] = useState<boolean>(false);
   const [showChurches, setShowChurches] = useState<boolean>(false);
   const [showSchools, setShowSchools] = useState<boolean>(false);
-  const [geojsonData, setGeojsonData] = useState<any>(null);
+  const [geojsonData, setGeojsonData] = useState<TractFeatureCollection | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   // Map of tracts by GEOID
@@ -98,8 +102,8 @@ export const MapLeaflet: React.FC<MapLeafletProps> = ({
   }, [isDark]);
 
   // Style function for GeoJSON polygons based on shadingMode
-  const getFeatureStyle = (feature: any) => {
-    const geoid = feature?.properties?.GEOID;
+  const getFeatureStyle = (feature?: TractFeature) => {
+    const geoid = feature?.properties?.GEOID ?? '';
     const tract = tractMap.current.get(geoid);
     const isSelected = selectedTract && selectedTract.GEOID === geoid;
 
@@ -210,7 +214,7 @@ export const MapLeaflet: React.FC<MapLeafletProps> = ({
     const geoLayer = L.geoJSON(geojsonData, {
       style: getFeatureStyle,
       onEachFeature: (feature, layer) => {
-        const geoid = feature?.properties?.GEOID;
+        const geoid = feature?.properties?.GEOID ?? '';
         const tract = tractMap.current.get(geoid);
 
         if (tract) {
@@ -266,15 +270,16 @@ export const MapLeaflet: React.FC<MapLeafletProps> = ({
       map.setView([28.5383, -81.3792], 9);
     } else {
       const countyFeatures = geojsonData.features.filter(
-        (f: any) =>
-          (tractMap.current.get(f.properties?.GEOID)?.county as string) ===
+        (f) =>
+          (tractMap.current.get(f.properties?.GEOID ?? '')?.county as string) ===
           selectedCounty
       );
       if (countyFeatures.length > 0) {
-        const tempLayer = L.geoJSON({
+        const countyCollection: TractFeatureCollection = {
           type: 'FeatureCollection',
           features: countyFeatures,
-        } as any);
+        };
+        const tempLayer = L.geoJSON(countyCollection);
         map.fitBounds(tempLayer.getBounds(), { padding: [20, 20] });
       }
     }

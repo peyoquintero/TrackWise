@@ -282,11 +282,17 @@ RULES:
   }
 });
 
+/** Minimal shape needed for county filtering; other fields pass through untouched. */
+interface CountyRecord {
+  county: string;
+  [key: string]: unknown;
+}
+
 // Helper: Load JSON datasets from disk or memory
-function loadDatasetFile(filename: string): any {
+function loadDatasetFile<T = unknown>(filename: string): T | null {
   const filePath = path.join(__dirname, 'public', 'data', filename);
   if (fs.existsSync(filePath)) {
-    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as T;
   }
   return null;
 }
@@ -294,14 +300,14 @@ function loadDatasetFile(filename: string): any {
 // REST API Database Endpoint: Census Tracts (For Looker Studio, External APIs, Dashboards)
 app.get('/api/db/tracts', (req, res) => {
   try {
-    const tractsData = loadDatasetFile('central_florida_food_gaps.json');
+    const tractsData = loadDatasetFile<CountyRecord[]>('central_florida_food_gaps.json');
     if (!tractsData) {
       return res.status(404).json({ error: 'Census tracts database records not found.' });
     }
     const county = req.query.county as string;
     let result = tractsData;
     if (county && county !== 'All') {
-      result = tractsData.filter((t: any) => t.county.toLowerCase() === county.toLowerCase());
+      result = tractsData.filter((t) => t.county.toLowerCase() === county.toLowerCase());
     }
     res.json({
       totalCount: result.length,
@@ -318,14 +324,14 @@ app.get('/api/db/tracts', (req, res) => {
 // REST API Database Endpoint: Authorized SNAP Retailers
 app.get('/api/db/snap-retailers', (req, res) => {
   try {
-    const retailersData = loadDatasetFile('central_florida_snap_retailers.json');
+    const retailersData = loadDatasetFile<CountyRecord[]>('central_florida_snap_retailers.json');
     if (!retailersData) {
       return res.status(404).json({ error: 'SNAP retailers database records not found.' });
     }
     const county = req.query.county as string;
     let result = retailersData;
     if (county && county !== 'All') {
-      result = retailersData.filter((r: any) => r.county.toLowerCase() === county.toLowerCase());
+      result = retailersData.filter((r) => r.county.toLowerCase() === county.toLowerCase());
     }
     res.json({
       totalCount: result.length,
@@ -342,7 +348,7 @@ app.get('/api/db/snap-retailers', (req, res) => {
 // REST API Database Endpoint: Church Community Sites
 app.get('/api/db/churches', (req, res) => {
   try {
-    const churchesData = loadDatasetFile('central_florida_churches.json');
+    const churchesData = loadDatasetFile<unknown[]>('central_florida_churches.json');
     res.json({
       totalCount: churchesData?.length || 0,
       databaseId: 'ai-studio-tracktwise-7db24125-8a82-40c9-b324-b7ed52892215',
@@ -358,7 +364,7 @@ app.get('/api/db/churches', (req, res) => {
 // REST API Database Endpoint: Public School Meal Sites
 app.get('/api/db/schools', (req, res) => {
   try {
-    const schoolsData = loadDatasetFile('central_florida_schools.json');
+    const schoolsData = loadDatasetFile<unknown[]>('central_florida_schools.json');
     res.json({
       totalCount: schoolsData?.length || 0,
       databaseId: 'ai-studio-tracktwise-7db24125-8a82-40c9-b324-b7ed52892215',
@@ -374,7 +380,7 @@ app.get('/api/db/schools', (req, res) => {
 // REST API Database Endpoint: Regional Summary Metrics
 app.get('/api/db/summary', (req, res) => {
   try {
-    const summaryData = loadDatasetFile('summary_metrics.json');
+    const summaryData = loadDatasetFile<Record<string, unknown>>('summary_metrics.json');
     res.json({
       databaseId: 'ai-studio-tracktwise-7db24125-8a82-40c9-b324-b7ed52892215',
       collection: 'summary_metrics',

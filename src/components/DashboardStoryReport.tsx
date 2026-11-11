@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import type React from 'react';
 import { lazy, Suspense, useMemo, useState } from 'react';
+import { onActivate } from '../lib/a11y';
 import { runScenarioModel, runSensitivityTest } from '../services/foodGapEngine';
 import type { ChurchData, CountyFilter, RetailerData, SchoolData, ShadingMode, TractData } from '../types';
 
@@ -778,10 +779,11 @@ export const DashboardStoryReport: React.FC<DashboardStoryReportProps> = ({
                     <span className="text-slate-400 italic text-[11px]">None in this county</span>
                   ) : (
                     top3Classic.map((t) => (
-                      <div
+                      <button
+                        type="button"
                         key={t.GEOID}
                         onClick={() => onSelectTract(t)}
-                        className="flex items-center justify-between p-1.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                        className="w-full text-left flex items-center justify-between p-1.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors"
                       >
                         <span className="font-medium text-slate-800 dark:text-slate-200 truncate pr-2">
                           {t.tract_name}
@@ -789,7 +791,7 @@ export const DashboardStoryReport: React.FC<DashboardStoryReportProps> = ({
                         <span className="font-mono text-[11px] tabular-nums text-slate-500 shrink-0">
                           {t.population.toLocaleString()}
                         </span>
-                      </div>
+                      </button>
                     ))
                   )}
                 </div>
@@ -840,10 +842,11 @@ export const DashboardStoryReport: React.FC<DashboardStoryReportProps> = ({
                     <span className="text-slate-400 italic text-[11px]">None in this county</span>
                   ) : (
                     top3Vehicle.map((t) => (
-                      <div
+                      <button
+                        type="button"
                         key={t.GEOID}
                         onClick={() => onSelectTract(t)}
-                        className="flex items-center justify-between p-1.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                        className="w-full text-left flex items-center justify-between p-1.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors"
                       >
                         <span className="font-medium text-slate-800 dark:text-slate-200 truncate pr-2">
                           {t.tract_name}
@@ -851,7 +854,7 @@ export const DashboardStoryReport: React.FC<DashboardStoryReportProps> = ({
                         <span className="font-mono text-[11px] tabular-nums text-slate-500 shrink-0">
                           {t.population.toLocaleString()}
                         </span>
-                      </div>
+                      </button>
                     ))
                   )}
                 </div>
@@ -902,10 +905,11 @@ export const DashboardStoryReport: React.FC<DashboardStoryReportProps> = ({
                     <span className="text-slate-400 italic text-[11px]">None in this county</span>
                   ) : (
                     top3Snap.map((t) => (
-                      <div
+                      <button
+                        type="button"
                         key={t.GEOID}
                         onClick={() => onSelectTract(t)}
-                        className="flex items-center justify-between p-1.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                        className="w-full text-left flex items-center justify-between p-1.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors"
                       >
                         <span className="font-medium text-slate-800 dark:text-slate-200 truncate pr-2">
                           {t.tract_name}
@@ -913,7 +917,7 @@ export const DashboardStoryReport: React.FC<DashboardStoryReportProps> = ({
                         <span className="font-mono text-[11px] tabular-nums text-slate-500 shrink-0">
                           {t.population.toLocaleString()}
                         </span>
-                      </div>
+                      </button>
                     ))
                   )}
                 </div>
@@ -1463,9 +1467,13 @@ export const DashboardStoryReport: React.FC<DashboardStoryReportProps> = ({
                 const isSelected = selectedCounty === c;
 
                 return (
+                  // biome-ignore lint/a11y/useSemanticElements: row contains block-level chart markup, which is invalid inside <button>
                   <div
                     key={c}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => onSelectCounty(c)}
+                    onKeyDown={onActivate(() => onSelectCounty(c))}
                     className={`space-y-1.5 p-2 rounded-lg cursor-pointer transition-colors ${
                       isSelected ? 'bg-red-50/70 dark:bg-red-950/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
                     }`}

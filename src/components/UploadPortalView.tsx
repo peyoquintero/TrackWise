@@ -183,6 +183,7 @@ export const UploadPortalView: React.FC = () => {
         {/* Terminal Log Console */}
         <div className="p-4 bg-slate-950 font-mono text-xs text-slate-300 space-y-1.5 max-h-56 overflow-y-auto">
           {logs.map((log, idx) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: append-only log; entries are never reordered or removed
             <div key={idx} className="leading-relaxed">
               <span className="text-slate-500">{log.split(']')[0]}]</span>
               <span className="text-slate-100">{log.split(']')[1]}</span>

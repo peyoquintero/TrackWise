@@ -15,6 +15,8 @@ export interface AppConfig {
   allowedOrigins: string[];
   /** Value for Express `trust proxy` (e.g. "1" behind one reverse proxy). Empty = off. */
   trustProxy: string;
+  /** Content-Security-Policy mode. Default: report-only in production, off elsewhere (Vite HMR needs inline scripts). */
+  cspMode: 'off' | 'report-only' | 'enforce';
   /** Echoed in /api/db/* responses for backwards compatibility with existing consumers. */
   databaseId: string;
 }
@@ -28,6 +30,12 @@ function parsePort(raw: string | undefined): number {
     throw new Error(`Invalid PORT "${raw}": expected an integer between 1 and 65535.`);
   }
   return port;
+}
+
+function parseCspMode(raw: string | undefined, nodeEnv: string): AppConfig['cspMode'] {
+  if (raw === undefined || raw === '') return nodeEnv === 'production' ? 'report-only' : 'off';
+  if (raw === 'off' || raw === 'report-only' || raw === 'enforce') return raw;
+  throw new Error(`Invalid CSP_MODE "${raw}": expected off, report-only or enforce.`);
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -50,6 +58,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     geminiModel: env.GEMINI_MODEL ?? 'gemini-2.5-flash',
     allowedOrigins,
     trustProxy: env.TRUST_PROXY ?? '',
+    cspMode: parseCspMode(env.CSP_MODE, nodeEnv),
     databaseId: env.DATABASE_ID ?? DEFAULT_DATABASE_ID,
   };
 }

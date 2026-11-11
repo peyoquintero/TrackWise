@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "generate:assets": "node scripts/generate-assets.js",
     "format": "biome check --write",
-    "verify": "npm run lint && npm run typecheck && npm test && npm run build"
+    "verify": "npm run lint && npm run typecheck && npm test && npm run build",
+    "prepare": "simple-git-hooks"
   },
   "dependencies": {
     "@google/genai": "^3.0.0",
@@ -39,6 +40,9 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.6",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.9",
     "@types/cors": "^2.8.19",
     "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
@@ -46,6 +50,8 @@
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.4.21",
     "cross-env": "^10.1.0",
+    "jsdom": "^29.1.1",
+    "simple-git-hooks": "^2.14.0",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
@@ -53,5 +59,8 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npm run lint && npm run typecheck"
   }
 }

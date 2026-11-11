@@ -12,7 +12,21 @@ const data = loadDatasets(config.dataDir);
 const app = createApp({ config, data, generateText: createGeminiGenerator(config) });
 
 if (config.nodeEnv === 'production') {
-  app.use(express.static(config.distDir));
+  app.use(
+    express.static(config.distDir, {
+      setHeaders(res, filePath) {
+        const rel = path.relative(config.distDir, filePath).split(path.sep);
+        if (rel[0] === 'assets' && rel[1] !== 'aistudio') {
+          // Vite content-hashes these filenames, so they can be cached indefinitely.
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        } else if (rel[0] === 'data') {
+          res.setHeader('Cache-Control', 'public, max-age=3600');
+        } else if (filePath.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'no-cache');
+        }
+      },
+    }),
+  );
   app.get('*', (_req, res) => {
     res.sendFile(path.join(config.distDir, 'index.html'));
   });

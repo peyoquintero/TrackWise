@@ -7,7 +7,11 @@ import { loadConfig } from '../server/config';
 import { loadDatasets } from '../server/data';
 import { computeStats } from '../server/stats';
 
-const config = loadConfig({ NODE_ENV: 'test', CORS_ALLOWED_ORIGINS: 'https://allowed.example' });
+const config = loadConfig({
+  NODE_ENV: 'test',
+  CORS_ALLOWED_ORIGINS: 'https://allowed.example',
+  CSP_MODE: 'report-only',
+});
 const data = loadDatasets(config.dataDir);
 const stats = computeStats(data);
 const fmt = (n: number) => n.toLocaleString('en-US');
@@ -77,6 +81,13 @@ describe('GET /api', () => {
     const denied = await fetch(`${base}/api/health`, { headers: { Origin: 'https://evil.example' } });
     expect(allowed.headers.get('access-control-allow-origin')).toBe('https://allowed.example');
     expect(denied.headers.get('access-control-allow-origin')).toBeNull();
+  });
+
+  it('sends a report-only CSP and cache headers on dataset routes', async () => {
+    const res = await fetch(`${base}/api/db/summary`);
+    expect(res.headers.get('content-security-policy-report-only')).toContain("default-src 'self'");
+    expect(res.headers.get('content-security-policy')).toBeNull();
+    expect(res.headers.get('cache-control')).toBe('public, max-age=300');
   });
 
   it('sends security headers and hides the framework', async () => {

@@ -644,8 +644,11 @@ export const FoodTruckRouteView: React.FC<FoodTruckRouteViewProps> = ({
 
           {/* County Selector */}
           <div>
-            <label className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1">Target County</label>
+            <label htmlFor="route-county" className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1">
+              Target County
+            </label>
             <select
+              id="route-county"
               value={selectedCounty}
               onChange={(e) => onSelectCounty(e.target.value as CountyFilter)}
               className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-1 focus:ring-[#a50f15]"
@@ -660,10 +663,15 @@ export const FoodTruckRouteView: React.FC<FoodTruckRouteViewProps> = ({
 
           {/* Facility Location Type Filter */}
           <div>
-            <label className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1">
+            <span id="route-area-type" className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1">
               Delivery Area Type
-            </label>
-            <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg text-xs">
+            </span>
+            {/* biome-ignore lint/a11y/useSemanticElements: styled segmented control; <fieldset> would need style resets */}
+            <div
+              role="group"
+              aria-labelledby="route-area-type"
+              className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg text-xs"
+            >
               <button
                 type="button"
                 onClick={() => setFacilityFilter('all')}
@@ -706,10 +714,11 @@ export const FoodTruckRouteView: React.FC<FoodTruckRouteViewProps> = ({
 
           {/* Depot Selector */}
           <div>
-            <label className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1">
+            <label htmlFor="route-depot" className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1">
               Distribution Depot (Start / Finish)
             </label>
             <select
+              id="route-depot"
               value={selectedDepotId}
               onChange={(e) => setSelectedDepotId(e.target.value)}
               className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-1 focus:ring-[#a50f15]"
@@ -760,8 +769,11 @@ export const FoodTruckRouteView: React.FC<FoodTruckRouteViewProps> = ({
           {/* Fleet Details */}
           <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
             <div>
-              <label className="text-[11px] font-medium text-slate-500 block mb-1">Fleet Vehicle</label>
+              <label htmlFor="route-truck" className="text-[11px] font-medium text-slate-500 block mb-1">
+                Fleet Vehicle
+              </label>
               <input
+                id="route-truck"
                 type="text"
                 value={truckName}
                 onChange={(e) => setTruckName(e.target.value)}
@@ -769,8 +781,11 @@ export const FoodTruckRouteView: React.FC<FoodTruckRouteViewProps> = ({
               />
             </div>
             <div>
-              <label className="text-[11px] font-medium text-slate-500 block mb-1">Assigned Driver</label>
+              <label htmlFor="route-driver" className="text-[11px] font-medium text-slate-500 block mb-1">
+                Assigned Driver
+              </label>
               <input
+                id="route-driver"
                 type="text"
                 value={driverName}
                 onChange={(e) => setDriverName(e.target.value)}
@@ -983,10 +998,11 @@ export const FoodTruckRouteView: React.FC<FoodTruckRouteViewProps> = ({
         {/* Manager Operational Notes */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
           <div className="md:col-span-2 space-y-1.5">
-            <label className="font-semibold text-slate-800 dark:text-slate-200 block">
+            <label htmlFor="route-notes" className="font-semibold text-slate-800 dark:text-slate-200 block">
               Manager Operational Notes &amp; Special Logistics Instructions
             </label>
             <textarea
+              id="route-notes"
               rows={3}
               value={managerNotes}
               onChange={(e) => setManagerNotes(e.target.value)}

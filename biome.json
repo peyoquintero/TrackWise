@@ -29,15 +29,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "recommended",
-      "a11y": {
-        "useKeyWithClickEvents": "warn",
-        "noStaticElementInteractions": "warn",
-        "noLabelWithoutControl": "warn"
-      },
-      "suspicious": {
-        "noArrayIndexKey": "warn"
-      }
+      "preset": "recommended"
     }
   },
   "javascript": {

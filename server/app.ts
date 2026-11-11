@@ -16,6 +16,46 @@ import { COUNTIES, computeStats, type DatasetStats } from './stats';
 
 const GEMINI_TIMEOUT_MS = 15_000;
 
+// Origins the client legitimately uses: Google Maps JS + tiles, Esri/Carto Leaflet basemaps, Google Fonts.
+const CSP_DIRECTIVES = {
+  defaultSrc: ["'self'"],
+  scriptSrc: ["'self'", 'https://maps.googleapis.com'],
+  styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+  fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+  imgSrc: [
+    "'self'",
+    'data:',
+    'blob:',
+    'https://*.googleapis.com',
+    'https://*.gstatic.com',
+    'https://server.arcgisonline.com',
+    'https://*.basemaps.cartocdn.com',
+  ],
+  connectSrc: ["'self'", 'https://*.googleapis.com'],
+  workerSrc: ["'self'", 'blob:'],
+  objectSrc: ["'none'"],
+  baseUri: ["'self'"],
+  frameAncestors: ["'self'"],
+};
+
+/** One JSON line per request: easy to ship to any log aggregator. */
+function requestLogger(req: Request, res: Response, next: NextFunction) {
+  const start = process.hrtime.bigint();
+  res.on('finish', () => {
+    const ms = Number(process.hrtime.bigint() - start) / 1e6;
+    console.log(
+      JSON.stringify({
+        t: new Date().toISOString(),
+        method: req.method,
+        path: req.path,
+        status: res.statusCode,
+        ms: Math.round(ms),
+      }),
+    );
+  });
+  next();
+}
+
 /** Minimal surface of the Gemini client we use; lets tests inject a fake. */
 export type GenerateText = (args: {
   systemInstruction: string;
@@ -52,8 +92,13 @@ export function createApp({ config, data, generateText }: AppDeps) {
   if (config.trustProxy)
     app.set('trust proxy', /^\d+$/.test(config.trustProxy) ? Number(config.trustProxy) : config.trustProxy);
 
-  // CSP is left to the deployment layer: the app loads Google Maps, Leaflet tiles and fonts from several origins.
-  app.use(helmet({ contentSecurityPolicy: false }));
+  if (config.nodeEnv !== 'test') app.use(requestLogger);
+  app.use(
+    helmet({
+      contentSecurityPolicy:
+        config.cspMode === 'off' ? false : { reportOnly: config.cspMode === 'report-only', directives: CSP_DIRECTIVES },
+    }),
+  );
   app.use(express.json({ limit: '10kb' }));
 
   const allowAny = config.allowedOrigins.includes('*');
@@ -103,6 +148,12 @@ export function createApp({ config, data, generateText }: AppDeps) {
       }
     }
     return res.json({ reply: generateAnalyticalFallback(message, stats), source: 'analytics' });
+  });
+
+  // Datasets change rarely; let browsers and CDNs reuse responses for a few minutes.
+  app.use('/api/db', (_req, res, next) => {
+    res.set('Cache-Control', 'public, max-age=300');
+    next();
   });
 
   // --- Read-only dataset API (consumed by Looker Studio and other external clients) ---

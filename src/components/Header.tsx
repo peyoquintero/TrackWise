@@ -29,7 +29,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, isDark,
           title="TrackWise - Food Access, Made Visible"
         >
           <img
-            src="/assets/aistudio/26959851-60dc-45a7-bc39-aa479279f5cd_6ffdfc91.png"
+            src="/assets/brand/26959851-60dc-45a7-bc39-aa479279f5cd_6ffdfc91.png"
             alt="TrackWise Logo"
             className="h-8 sm:h-9 w-auto object-contain dark:bg-white/90 dark:p-1 dark:rounded-md"
           />

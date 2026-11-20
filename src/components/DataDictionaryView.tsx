@@ -295,14 +295,10 @@ export const DataDictionaryView: React.FC = () => {
             <BookOpen className="w-4 h-4 text-red-600 shrink-0 mt-0.5 sm:mt-0" />
             <span>
               <b>Specification v1.1 Committed:</b> Full architecture, 5-step classification rules, and 4-point
-              confidence rubric are committed to repository root as{' '}
+              confidence rubric are committed to the repository root as{' '}
               <code className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-mono text-[11px] text-slate-800 dark:text-slate-200">
                 SPECIFICATION.md
               </code>{' '}
-              and{' '}
-              <code className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-mono text-[11px] text-slate-800 dark:text-slate-200">
-                docs/Central_Florida_Food_Access_Gaps_Specification_v1.1.md
-              </code>
               .
             </span>
           </div>

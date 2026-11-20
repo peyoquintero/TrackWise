@@ -16,7 +16,7 @@ if (config.nodeEnv === 'production') {
     express.static(config.distDir, {
       setHeaders(res, filePath) {
         const rel = path.relative(config.distDir, filePath).split(path.sep);
-        if (rel[0] === 'assets' && rel[1] !== 'aistudio') {
+        if (rel[0] === 'assets' && rel[1] !== 'brand') {
           // Vite content-hashes these filenames, so they can be cached indefinitely.
           res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
         } else if (rel[0] === 'data') {

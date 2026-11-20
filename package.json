@@ -1,14 +1,22 @@
 {
   "name": "trackwise",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx server.ts",
+    "dev": "tsx server/index.ts",
     "build": "vite build",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "lint": "biome check",
+    "start": "cross-env NODE_ENV=production tsx server/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "generate:assets": "node scripts/generate-assets.js",
+    "format": "biome check --write",
+    "verify": "npm run lint && npm run typecheck && npm test && npm run build",
+    "prepare": "simple-git-hooks"
   },
   "dependencies": {
     "@google/genai": "^3.0.0",
@@ -20,8 +28,9 @@
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
-    "express-rate-limit": "^8.7.3",
+    "express-rate-limit": "^8.7.4",
     "firebase": "^13.2.0",
+    "helmet": "^8.3.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
@@ -30,15 +39,28 @@
     "vite": "^8.3.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.6.6",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.9",
     "@types/cors": "^2.8.19",
     "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.4.21",
-    "esbuild": "^0.28.0",
+    "cross-env": "^10.1.0",
+    "jsdom": "^29.1.1",
+    "simple-git-hooks": "^2.14.0",
     "tailwindcss": "^4.3.3",
-    "tsx": "^4.21.0",
-    "typescript": "^7.0.2"
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npm run lint && npm run typecheck"
   }
 }

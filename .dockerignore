@@ -1,0 +1,11 @@
+node_modules
+dist
+.git
+.github
+.env*
+!.env.example
+raw_data
+fl_tracts_shapefile
+docs
+coverage
+*.log
